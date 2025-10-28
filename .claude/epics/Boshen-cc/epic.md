@@ -4,7 +4,7 @@ status: backlog
 created: 2025-10-28T07:41:36Z
 progress: 0%
 prd: .claude/prds/Boshen-cc.md
-github: [Will be updated when synced to GitHub]
+github: https://github.com/mattdog2024/Boshen-cc/issues/1
 ---
 
 # Epic: Boshen-cc
