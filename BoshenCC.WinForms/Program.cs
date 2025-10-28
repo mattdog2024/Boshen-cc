@@ -6,80 +6,111 @@ using BoshenCC.Services.Interfaces;
 using BoshenCC.Services.Implementations;
 using BoshenCC.Core.Interfaces;
 using BoshenCC.Core;
+using BoshenCC.WinForms.Services;
 
 namespace BoshenCC.WinForms
 {
+    /// <summary>
+    /// åº”ç”¨ç¨‹åºä¸»ç¨‹åºç±»
+    /// </summary>
     static class Program
     {
+        private static ExceptionHandlerService _exceptionHandler;
+
         /// <summary>
-        /// Ó¦ÓÃ³ÌĞòµÄÖ÷Èë¿Úµã¡£
+        /// åº”ç”¨ç¨‹åºçš„ä¸»å…¥å£ç‚¹ã€‚
         /// </summary>
         [STAThread]
         static void Main()
         {
             try
             {
-                // ³õÊ¼»¯·şÎñ
-                InitializeServices();
-
+                // å¯ç”¨åº”ç”¨ç¨‹åºæ¡†æ¶
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
+
+                // åˆå§‹åŒ–æœåŠ¡
+                InitializeServices();
+
+                // åˆå§‹åŒ–å…¨å±€å¼‚å¸¸å¤„ç†
+                InitializeExceptionHandling();
+
+                // å¯åŠ¨ä¸»çª—ä½“
                 Application.Run(new MainWindow());
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ó¦ÓÃ³ÌĞòÆô¶¯Ê§°Ü: {ex.Message}", "´íÎó",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ShowFatalError(ex);
             }
             finally
             {
-                // ÇåÀí×ÊÔ´
+                // æ¸…ç†èµ„æº
                 CleanupServices();
             }
         }
 
         /// <summary>
-        /// ³õÊ¼»¯ËùÓĞ·şÎñ
+        /// åˆå§‹åŒ–æ‰€æœ‰æœåŠ¡
         /// </summary>
         private static void InitializeServices()
         {
             try
             {
-                // ×¢²áÈÕÖ¾·şÎñ
+                // æ³¨å†Œæ—¥å¿—æœåŠ¡
                 var logService = new LogService();
                 ServiceLocator.RegisterSingleton<ILogService>(logService);
 
-                // ×¢²áÅäÖÃ·şÎñ
+                // æ³¨å†Œé…ç½®æœåŠ¡
                 var configService = new ConfigService();
                 ServiceLocator.RegisterSingleton<IConfigService>(configService);
 
-                // ×¢²á½ØÍ¼·şÎñ
+                // æ³¨å†Œæˆªå›¾æœåŠ¡
                 var screenshotService = new ScreenshotService();
                 ServiceLocator.RegisterSingleton<IScreenshotService>(screenshotService);
 
-                // ×¢²áÍ¼Ïñ´¦ÀíÆ÷
-                var imageProcessor = new ImageProcessor();
+                // æ³¨å†Œå›¾åƒå¤„ç†å™¨
+                var imageProcessor = new ImageProcessor(logService);
                 ServiceLocator.RegisterSingleton<IImageProcessor>(imageProcessor);
 
-                // ¼ÇÂ¼·şÎñ³õÊ¼»¯Íê³É
-                logService.Info("ËùÓĞ·şÎñ³õÊ¼»¯Íê³É");
+                // è®°å½•æœåŠ¡åˆå§‹åŒ–å®Œæˆ
+                logService.Info("æ‰€æœ‰æœåŠ¡åˆå§‹åŒ–å®Œæˆ");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"·şÎñ³õÊ¼»¯Ê§°Ü: {ex.Message}", "´íÎó",
+                MessageBox.Show($"æœåŠ¡åˆå§‹åŒ–å¤±è´¥: {ex.Message}", "é”™è¯¯",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 throw;
             }
         }
 
         /// <summary>
-        /// ÇåÀí·şÎñ×ÊÔ´
+        /// åˆå§‹åŒ–å¼‚å¸¸å¤„ç†æ¡†æ¶
+        /// </summary>
+        private static void InitializeExceptionHandling()
+        {
+            try
+            {
+                var logService = ServiceLocator.GetService<ILogService>();
+                _exceptionHandler = new ExceptionHandlerService(logService);
+                _exceptionHandler.InitializeGlobalExceptionHandling();
+
+                logService?.Info("å¼‚å¸¸å¤„ç†æ¡†æ¶åˆå§‹åŒ–å®Œæˆ");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"å¼‚å¸¸å¤„ç†æ¡†æ¶åˆå§‹åŒ–å¤±è´¥: {ex.Message}", "é”™è¯¯",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// æ¸…ç†æœåŠ¡èµ„æº
         /// </summary>
         private static void CleanupServices()
         {
             try
             {
-                // »ñÈ¡²¢ÇåÀíÈÕÖ¾·şÎñ
+                // è·å–å¹¶å…³é—­æ—¥å¿—æœåŠ¡
                 if (ServiceLocator.IsRegistered<ILogService>())
                 {
                     var logService = ServiceLocator.GetService<ILogService>();
@@ -90,13 +121,49 @@ namespace BoshenCC.WinForms
                     }
                 }
 
-                // ÇåÀíËùÓĞ×¢²áµÄ·şÎñ
+                // æ¸…ç†æ‰€æœ‰æ³¨å†Œçš„æœåŠ¡
                 ServiceLocator.Clear();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"·şÎñÇåÀíÊ§°Ü: {ex.Message}");
+                Console.WriteLine($"æ¸…ç†æœåŠ¡å¤±è´¥: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// æ˜¾ç¤ºè‡´å‘½é”™è¯¯
+        /// </summary>
+        private static void ShowFatalError(Exception ex)
+        {
+            var message = $"åº”ç”¨ç¨‹åºå‘ç”Ÿè‡´å‘½é”™è¯¯ï¼Œå³å°†é€€å‡ºï¼š\n\n{ex.Message}";
+
+            // å¦‚æœæœ‰å†…éƒ¨å¼‚å¸¸ï¼Œä¹Ÿæ˜¾ç¤ºå†…éƒ¨å¼‚å¸¸çš„ä¿¡æ¯
+            var innerException = ex.InnerException;
+            if (innerException != null)
+            {
+                message += $"\n\nè¯¦ç»†ä¿¡æ¯: {innerException.Message}";
+            }
+
+            message += $"\n\nå¼‚å¸¸ç±»å‹: {ex.GetType().Name}";
+
+            MessageBox.Show(message, "è‡´å‘½é”™è¯¯",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        /// <summary>
+        /// å®‰å…¨æ‰§è¡Œæ“ä½œ
+        /// </summary>
+        public static bool SafeExecute(Action action, string operationName = "æ“ä½œ")
+        {
+            return _exceptionHandler?.SafeExecute(action, operationName) ?? false;
+        }
+
+        /// <summary>
+        /// å®‰å…¨æ‰§è¡Œæ“ä½œå¹¶è¿”å›ç»“æœ
+        /// </summary>
+        public static T SafeExecute<T>(Func<T> func, string operationName = "æ“ä½œ", T defaultValue = default(T))
+        {
+            return _exceptionHandler?.SafeExecute(func, operationName, defaultValue) ?? defaultValue;
         }
     }
 }

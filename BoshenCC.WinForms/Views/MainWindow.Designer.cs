@@ -202,33 +202,33 @@ namespace BoshenCC.WinForms.Views
             //
             // toolStripButtonOpen
             //
-            this.toolStripButtonOpen.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonOpen.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripButtonOpen.Name = "toolStripButtonOpen";
-            this.toolStripButtonOpen.Size = new System.Drawing.Size(29, 24);
+            this.toolStripButtonOpen.Size = new System.Drawing.Size(68, 24);
             this.toolStripButtonOpen.Text = "打开图像";
             this.toolStripButtonOpen.Click += new System.EventHandler(this.toolStripButtonOpen_Click);
             //
             // toolStripButtonSingleMeasure
             //
-            this.toolStripButtonSingleMeasure.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonSingleMeasure.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripButtonSingleMeasure.Name = "toolStripButtonSingleMeasure";
-            this.toolStripButtonSingleMeasure.Size = new System.Drawing.Size(29, 24);
+            this.toolStripButtonSingleMeasure.Size = new System.Drawing.Size(68, 24);
             this.toolStripButtonSingleMeasure.Text = "单体测量";
             this.toolStripButtonSingleMeasure.Click += new System.EventHandler(this.toolStripButtonSingleMeasure_Click);
             //
             // toolStripButtonLineMeasure
             //
-            this.toolStripButtonLineMeasure.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonLineMeasure.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripButtonLineMeasure.Name = "toolStripButtonLineMeasure";
-            this.toolStripButtonLineMeasure.Size = new System.Drawing.Size(29, 24);
+            this.toolStripButtonLineMeasure.Size = new System.Drawing.Size(68, 24);
             this.toolStripButtonLineMeasure.Text = "影线测量";
             this.toolStripButtonLineMeasure.Click += new System.EventHandler(this.toolStripButtonLineMeasure_Click);
             //
             // toolStripButtonClear
             //
-            this.toolStripButtonClear.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonClear.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.toolStripButtonClear.Name = "toolStripButtonClear";
-            this.toolStripButtonClear.Size = new System.Drawing.Size(29, 24);
+            this.toolStripButtonClear.Size = new System.Drawing.Size(68, 24);
             this.toolStripButtonClear.Text = "清除线条";
             this.toolStripButtonClear.Click += new System.EventHandler(this.toolStripButtonClear_Click);
             //
