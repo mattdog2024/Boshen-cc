@@ -1,81 +1,235 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace BoshenCC.Models
 {
     /// <summary>
-    /// å­—ç¬¦è¯†åˆ«ç»“æœ
+    /// ×Ö·ûÊ¶±ğ½á¹û
     /// </summary>
+    [JsonObject(MemberSerialization.OptIn)]
     public class RecognitionResult
     {
         /// <summary>
-        /// æ˜¯å¦æˆåŠŸè¯†åˆ«
+        /// ÊÇ·ñ³É¹¦Ê¶±ğ
         /// </summary>
+        [JsonProperty]
         public bool Success { get; set; }
 
         /// <summary>
-        /// è¯†åˆ«å‡ºçš„æ–‡æœ¬
+        /// Ê¶±ğ³öµÄÎÄ±¾
         /// </summary>
+        [JsonProperty]
+        [StringLength(10000, ErrorMessage = "Ê¶±ğÎÄ±¾³¤¶È²»ÄÜ³¬¹ı10000¸ö×Ö·û")]
         public string RecognizedText { get; set; }
 
         /// <summary>
-        /// è¯†åˆ«ç½®ä¿¡åº¦ (0-1)
+        /// Ê¶±ğÖÃĞÅ¶È (0-1)
         /// </summary>
+        [JsonProperty]
+        [Range(0.0, 1.0, ErrorMessage = "ÖÃĞÅ¶È±ØĞëÔÚ0-1Ö®¼ä")]
         public double Confidence { get; set; }
 
         /// <summary>
-        /// é”™è¯¯ä¿¡æ¯
+        /// ´íÎóĞÅÏ¢
         /// </summary>
+        [JsonProperty]
+        [StringLength(500, ErrorMessage = "´íÎóĞÅÏ¢³¤¶È²»ÄÜ³¬¹ı500¸ö×Ö·û")]
         public string ErrorMessage { get; set; }
 
         /// <summary>
-        /// å¤„ç†è€—æ—¶ï¼ˆæ¯«ç§’ï¼‰
+        /// ´¦ÀíºÄÊ±£¨ºÁÃë£©
         /// </summary>
+        [JsonProperty]
+        [Range(0, long.MaxValue, ErrorMessage = "´¦ÀíÊ±¼ä²»ÄÜÎª¸ºÊı")]
         public long ProcessingTimeMs { get; set; }
 
         /// <summary>
-        /// è¯†åˆ«æ—¶é—´æˆ³
+        /// Ê¶±ğÊ±¼ä´Á
         /// </summary>
+        [JsonProperty]
         public DateTime Timestamp { get; set; } = DateTime.Now;
 
         /// <summary>
-        /// è¯†åˆ«åˆ°çš„å­—ç¬¦åˆ—è¡¨
+        /// Ê¶±ğµ½µÄ×Ö·ûÁĞ±í
         /// </summary>
-        public RecognizedCharacter[] Characters { get; set; } = new RecognizedCharacter[0];
+        [JsonProperty]
+        public List<RecognizedCharacter> Characters { get; set; } = new List<RecognizedCharacter>();
+
+        /// <summary>
+        /// Í¼Ïñ´¦ÀíÂ·¾¶
+        /// </summary>
+        [JsonProperty]
+        public string ImagePath { get; set; }
+
+        /// <summary>
+        /// Ê¶±ğÒıÇæÀàĞÍ
+        /// </summary>
+        [JsonProperty]
+        public string EngineType { get; set; }
+
+        /// <summary>
+        /// Ê¶±ğÓïÑÔ
+        /// </summary>
+        [JsonProperty]
+        public string Language { get; set; }
+
+        /// <summary>
+        /// ÑéÖ¤Ä£ĞÍÊı¾İ
+        /// </summary>
+        /// <returns>ÑéÖ¤½á¹û</returns>
+        public ValidationResult ValidateModel()
+        {
+            var context = new ValidationContext(this);
+            var results = new List<ValidationResult>();
+            var isValid = Validator.TryValidateObject(this, context, results, true);
+
+            return new ValidationResult
+            {
+                IsValid = isValid,
+                Errors = results.ConvertAll(r => r.ErrorMessage)
+            };
+        }
+
+        /// <summary>
+        /// ×ª»»ÎªJSON×Ö·û´®
+        /// </summary>
+        /// <returns>JSON×Ö·û´®</returns>
+        public string ToJson()
+        {
+            return JsonConvert.SerializeObject(this, Formatting.Indented);
+        }
+
+        /// <summary>
+        /// ´ÓJSON×Ö·û´®´´½¨ÊµÀı
+        /// </summary>
+        /// <param name="json">JSON×Ö·û´®</param>
+        /// <returns>RecognitionResultÊµÀı</returns>
+        public static RecognitionResult FromJson(string json)
+        {
+            return JsonConvert.DeserializeObject<RecognitionResult>(json);
+        }
+
+        /// <summary>
+        /// ´´½¨³É¹¦µÄÊ¶±ğ½á¹û
+        /// </summary>
+        /// <param name="text">Ê¶±ğÎÄ±¾</param>
+        /// <param name="confidence">ÖÃĞÅ¶È</param>
+        /// <param name="processingTime">´¦ÀíÊ±¼ä</param>
+        /// <returns>³É¹¦µÄ½á¹û</returns>
+        public static RecognitionResult CreateSuccess(string text, double confidence, long processingTime)
+        {
+            return new RecognitionResult
+            {
+                Success = true,
+                RecognizedText = text,
+                Confidence = confidence,
+                ProcessingTimeMs = processingTime,
+                Timestamp = DateTime.Now
+            };
+        }
+
+        /// <summary>
+        /// ´´½¨Ê§°ÜµÄÊ¶±ğ½á¹û
+        /// </summary>
+        /// <param name="error">´íÎóĞÅÏ¢</param>
+        /// <param name="processingTime">´¦ÀíÊ±¼ä</param>
+        /// <returns>Ê§°ÜµÄ½á¹û</returns>
+        public static RecognitionResult CreateFailure(string error, long processingTime)
+        {
+            return new RecognitionResult
+            {
+                Success = false,
+                ErrorMessage = error,
+                Confidence = 0.0,
+                ProcessingTimeMs = processingTime,
+                Timestamp = DateTime.Now
+            };
+        }
     }
+}
 
     /// <summary>
-    /// è¯†åˆ«åˆ°çš„å•ä¸ªå­—ç¬¦
+    /// Ê¶±ğµ½µÄµ¥¸ö×Ö·û
     /// </summary>
+    [JsonObject(MemberSerialization.OptIn)]
     public class RecognizedCharacter
     {
         /// <summary>
-        /// å­—ç¬¦å†…å®¹
+        /// ×Ö·ûÄÚÈİ
         /// </summary>
+        [JsonProperty]
+        [StringLength(1, ErrorMessage = "µ¥¸ö×Ö·û³¤¶È²»ÄÜ³¬¹ı1")]
         public string Character { get; set; }
 
         /// <summary>
-        /// ç½®ä¿¡åº¦
+        /// ÖÃĞÅ¶È
         /// </summary>
+        [JsonProperty]
+        [Range(0.0, 1.0, ErrorMessage = "ÖÃĞÅ¶È±ØĞëÔÚ0-1Ö®¼ä")]
         public double Confidence { get; set; }
 
         /// <summary>
-        /// Xåæ ‡
+        /// X×ø±ê
         /// </summary>
+        [JsonProperty]
+        [Range(0, int.MaxValue, ErrorMessage = "X×ø±ê²»ÄÜÎª¸ºÊı")]
         public int X { get; set; }
 
         /// <summary>
-        /// Yåæ ‡
+        /// Y×ø±ê
         /// </summary>
+        [JsonProperty]
+        [Range(0, int.MaxValue, ErrorMessage = "Y×ø±ê²»ÄÜÎª¸ºÊı")]
         public int Y { get; set; }
 
         /// <summary>
-        /// å®½åº¦
+        /// ¿í¶È
         /// </summary>
+        [JsonProperty]
+        [Range(1, int.MaxValue, ErrorMessage = "¿í¶È±ØĞë´óÓÚ0")]
         public int Width { get; set; }
 
         /// <summary>
-        /// é«˜åº¦
+        /// ¸ß¶È
         /// </summary>
+        [JsonProperty]
+        [Range(1, int.MaxValue, ErrorMessage = "¸ß¶È±ØĞë´óÓÚ0")]
         public int Height { get; set; }
+
+        /// <summary>
+        /// »ñÈ¡×Ö·ûµÄ±ß½ç¾ØĞÎ
+        /// </summary>
+        /// <returns>±ß½ç¾ØĞÎ</returns>
+        public System.Drawing.Rectangle GetBounds()
+        {
+            return new System.Drawing.Rectangle(X, Y, Width, Height);
+        }
+
+        /// <summary>
+        /// »ñÈ¡×Ö·ûµÄÖĞĞÄµã
+        /// </summary>
+        /// <returns>ÖĞĞÄµã×ø±ê</returns>
+        public System.Drawing.Point GetCenter()
+        {
+            return new System.Drawing.Point(X + Width / 2, Y + Height / 2);
+        }
+    }
+
+    /// <summary>
+    /// ÑéÖ¤½á¹û
+    /// </summary>
+    public class ValidationResult
+    {
+        /// <summary>
+        /// ÊÇ·ñÓĞĞ§
+        /// </summary>
+        public bool IsValid { get; set; }
+
+        /// <summary>
+        /// ´íÎóÁĞ±í
+        /// </summary>
+        public List<string> Errors { get; set; } = new List<string>();
     }
 }
