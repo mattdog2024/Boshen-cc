@@ -1,20 +1,102 @@
 using System;
 using System.Windows.Forms;
 using BoshenCC.WinForms.Views;
+using BoshenCC.Core.Utils;
+using BoshenCC.Services.Interfaces;
+using BoshenCC.Services.Implementations;
+using BoshenCC.Core.Interfaces;
+using BoshenCC.Core;
 
 namespace BoshenCC.WinForms
 {
     static class Program
     {
         /// <summary>
-        /// åº”ç”¨ç¨‹åºçš„ä¸»å…¥å£ç‚¹ã€‚
+        /// Ó¦ÓÃ³ÌĞòµÄÖ÷Èë¿Úµã¡£
         /// </summary>
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainWindow());
+            try
+            {
+                // ³õÊ¼»¯·şÎñ
+                InitializeServices();
+
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new MainWindow());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ó¦ÓÃ³ÌĞòÆô¶¯Ê§°Ü: {ex.Message}", "´íÎó",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                // ÇåÀí×ÊÔ´
+                CleanupServices();
+            }
+        }
+
+        /// <summary>
+        /// ³õÊ¼»¯ËùÓĞ·şÎñ
+        /// </summary>
+        private static void InitializeServices()
+        {
+            try
+            {
+                // ×¢²áÈÕÖ¾·şÎñ
+                var logService = new LogService();
+                ServiceLocator.RegisterSingleton<ILogService>(logService);
+
+                // ×¢²áÅäÖÃ·şÎñ
+                var configService = new ConfigService();
+                ServiceLocator.RegisterSingleton<IConfigService>(configService);
+
+                // ×¢²á½ØÍ¼·şÎñ
+                var screenshotService = new ScreenshotService();
+                ServiceLocator.RegisterSingleton<IScreenshotService>(screenshotService);
+
+                // ×¢²áÍ¼Ïñ´¦ÀíÆ÷
+                var imageProcessor = new ImageProcessor();
+                ServiceLocator.RegisterSingleton<IImageProcessor>(imageProcessor);
+
+                // ¼ÇÂ¼·şÎñ³õÊ¼»¯Íê³É
+                logService.Info("ËùÓĞ·şÎñ³õÊ¼»¯Íê³É");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"·şÎñ³õÊ¼»¯Ê§°Ü: {ex.Message}", "´íÎó",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// ÇåÀí·şÎñ×ÊÔ´
+        /// </summary>
+        private static void CleanupServices()
+        {
+            try
+            {
+                // »ñÈ¡²¢ÇåÀíÈÕÖ¾·şÎñ
+                if (ServiceLocator.IsRegistered<ILogService>())
+                {
+                    var logService = ServiceLocator.GetService<ILogService>();
+                    if (logService is LogService nlogService)
+                    {
+                        nlogService.Flush();
+                        nlogService.Shutdown();
+                    }
+                }
+
+                // ÇåÀíËùÓĞ×¢²áµÄ·şÎñ
+                ServiceLocator.Clear();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"·şÎñÇåÀíÊ§°Ü: {ex.Message}");
+            }
         }
     }
 }
