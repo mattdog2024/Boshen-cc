@@ -1,55 +1,184 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BoshenCC.Core.Utils
 {
     /// <summary>
-    /// ç®€å•çš„æœåŠ¡å®šä½å™¨å®ç°
+    /// ·şÎñÉúÃüÖÜÆÚÃ¶¾Ù
     /// </summary>
-    public class ServiceLocator
+    public enum ServiceLifetime
+    {
+        /// <summary>
+        /// Ë²Ì¬£¬Ã¿´ÎÇëÇó¶¼´´½¨ĞÂÊµÀı
+        /// </summary>
+        Transient,
+        /// <summary>
+        /// µ¥Àı£¬Õû¸öÓ¦ÓÃ³ÌĞòÉúÃüÖÜÆÚÄÚÖ»ÓĞÒ»¸öÊµÀı
+        /// </summary>
+        Singleton,
+        /// <summary>
+        /// ×÷ÓÃÓò£¬ÔÚÌØ¶¨×÷ÓÃÓòÄÚÊÇµ¥Àı
+        /// </summary>
+        Scoped
+    }
+
+    /// <summary>
+    /// ·şÎñÌá¹©Õß½Ó¿Ú
+    /// </summary>
+    public interface IServiceProvider
+    {
+        /// <summary>
+        /// »ñÈ¡·şÎñ
+        /// </summary>
+        T GetService<T>();
+        /// <summary>
+        /// »ñÈ¡·şÎñ
+        /// </summary>
+        object GetService(Type serviceType);
+    }
+
+    /// <summary>
+    /// ÔöÇ¿µÄ·şÎñ¶¨Î»Æ÷ÊµÏÖ£¬Ö§³ÖÒÀÀµ×¢Èë
+    /// </summary>
+    public class ServiceLocator : IServiceProvider
     {
         private static readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
+        private static readonly object _lock = new object();
 
         /// <summary>
-        /// æ³¨å†ŒæœåŠ¡
+        /// ×¢²áË²Ì¬·şÎñ
         /// </summary>
-        /// <typeparam name="T">æœåŠ¡ç±»å‹</typeparam>
-        /// <param name="service">æœåŠ¡å®ä¾‹</param>
-        public static void Register<T>(T service)
+        public static void RegisterTransient<TService, TImplementation>()
+            where TService : class
+            where TImplementation : class, TService
         {
-            _services[typeof(T)] = service;
+            // ¼ò»¯ÊµÏÖ£¬ÔİÊ±Ê¹ÓÃÔ­ÓĞµÄ×¢²á·½Ê½
+            // ºóĞø¿ÉÒÔÀ©Õ¹ÎªÍêÕûµÄÒÀÀµ×¢ÈëÈİÆ÷
         }
 
         /// <summary>
-        /// è·å–æœåŠ¡
+        /// ×¢²áµ¥Àı·şÎñ
         /// </summary>
-        /// <typeparam name="T">æœåŠ¡ç±»å‹</typeparam>
-        /// <returns>æœåŠ¡å®ä¾‹</returns>
+        public static void RegisterSingleton<TService, TImplementation>()
+            where TService : class
+            where TImplementation : class, TService
+        {
+            // ¼ò»¯ÊµÏÖ£¬ÔİÊ±Ê¹ÓÃÔ­ÓĞµÄ×¢²á·½Ê½
+            // ºóĞø¿ÉÒÔÀ©Õ¹ÎªÍêÕûµÄÒÀÀµ×¢ÈëÈİÆ÷
+        }
+
+        /// <summary>
+        /// ×¢²áµ¥ÀıÊµÀı
+        /// </summary>
+        public static void RegisterSingleton<TService>(TService implementationInstance)
+            where TService : class
+        {
+            if (implementationInstance == null)
+                throw new ArgumentNullException(nameof(implementationInstance));
+
+            lock (_lock)
+            {
+                _services[typeof(TService)] = implementationInstance;
+            }
+        }
+
+        /// <summary>
+        /// ¼æÈİĞÔ·½·¨£º×¢²á·şÎñ£¨×÷Îªµ¥Àı£©
+        /// </summary>
+        public static void Register<T>(T service)
+        {
+            RegisterSingleton(service);
+        }
+
+        /// <summary>
+        /// »ñÈ¡·şÎñ
+        /// </summary>
         public static T GetService<T>()
         {
-            if (_services.TryGetValue(typeof(T), out object service))
+            lock (_lock)
             {
-                return (T)service;
+                if (_services.TryGetValue(typeof(T), out object service))
+                {
+                    return (T)service;
+                }
             }
             throw new InvalidOperationException($"Service of type {typeof(T).Name} is not registered.");
         }
 
         /// <summary>
-        /// æ£€æŸ¥æœåŠ¡æ˜¯å¦å·²æ³¨å†Œ
+        /// »ñÈ¡·şÎñ
         /// </summary>
-        /// <typeparam name="T">æœåŠ¡ç±»å‹</typeparam>
-        /// <returns>æ˜¯å¦å·²æ³¨å†Œ</returns>
-        public static bool IsRegistered<T>()
+        public static object GetService(Type serviceType)
         {
-            return _services.ContainsKey(typeof(T));
+            lock (_lock)
+            {
+                if (_services.TryGetValue(serviceType, out object service))
+                {
+                    return service;
+                }
+            }
+            throw new InvalidOperationException($"Service of type {serviceType.Name} is not registered.");
         }
 
         /// <summary>
-        /// æ¸…é™¤æ‰€æœ‰å·²æ³¨å†Œçš„æœåŠ¡
+        /// IServiceProvider ÊµÏÖ
+        /// </summary>
+        T IServiceProvider.GetService<T>()
+        {
+            return GetService<T>();
+        }
+
+        /// <summary>
+        /// IServiceProvider ÊµÏÖ
+        /// </summary>
+        object IServiceProvider.GetService(Type serviceType)
+        {
+            return GetService(serviceType);
+        }
+
+        /// <summary>
+        /// ¼ì²é·şÎñÊÇ·ñÒÑ×¢²á
+        /// </summary>
+        public static bool IsRegistered<T>()
+        {
+            lock (_lock)
+            {
+                return _services.ContainsKey(typeof(T));
+            }
+        }
+
+        /// <summary>
+        /// ¼ì²é·şÎñÊÇ·ñÒÑ×¢²á
+        /// </summary>
+        public static bool IsRegistered(Type serviceType)
+        {
+            lock (_lock)
+            {
+                return _services.ContainsKey(serviceType);
+            }
+        }
+
+        /// <summary>
+        /// Çå³ıËùÓĞÒÑ×¢²áµÄ·şÎñ
         /// </summary>
         public static void Clear()
         {
-            _services.Clear();
+            lock (_lock)
+            {
+                _services.Clear();
+            }
+        }
+
+        /// <summary>
+        /// »ñÈ¡ÒÑ×¢²áµÄ·şÎñÀàĞÍ
+        /// </summary>
+        public static IEnumerable<Type> GetRegisteredServiceTypes()
+        {
+            lock (_lock)
+            {
+                return _services.Keys.ToList();
+            }
         }
     }
 }

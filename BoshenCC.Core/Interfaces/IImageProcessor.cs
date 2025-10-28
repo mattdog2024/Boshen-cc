@@ -1,33 +1,96 @@
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using BoshenCC.Models;
 
 namespace BoshenCC.Core.Interfaces
 {
     /// <summary>
-    /// å›¾åƒå¤„ç†å™¨æ¥å£
+    /// Í¼Ïñ´¦ÀíÆ÷½Ó¿Ú
     /// </summary>
     public interface IImageProcessor
     {
         /// <summary>
-        /// å¤„ç†å›¾åƒ
+        /// ´¦ÀíÍ¼Ïñ
         /// </summary>
-        /// <param name="image">è¾“å…¥å›¾åƒ</param>
-        /// <returns>å¤„ç†åçš„å›¾åƒ</returns>
-        Bitmap ProcessImage(Bitmap image);
+        /// <param name="image">ÊäÈëÍ¼Ïñ</param>
+        /// <param name="options">´¦ÀíÑ¡Ïî</param>
+        /// <returns>´¦ÀíºóµÄÍ¼Ïñ</returns>
+        Bitmap ProcessImage(Bitmap image, ProcessingOptions options = null);
 
         /// <summary>
-        /// è¯†åˆ«å›¾åƒä¸­çš„å­—ç¬¦
+        /// Ê¶±ğÍ¼ÏñÖĞµÄ×Ö·û
         /// </summary>
-        /// <param name="image">è¾“å…¥å›¾åƒ</param>
-        /// <returns>è¯†åˆ«ç»“æœ</returns>
+        /// <param name="image">ÊäÈëÍ¼Ïñ</param>
+        /// <returns>Ê¶±ğ½á¹û</returns>
         RecognitionResult RecognizeCharacters(Bitmap image);
 
         /// <summary>
-        /// é¢„å¤„ç†å›¾åƒ
+        /// Ô¤´¦ÀíÍ¼Ïñ
         /// </summary>
-        /// <param name="image">è¾“å…¥å›¾åƒ</param>
-        /// <returns>é¢„å¤„ç†åçš„å›¾åƒ</returns>
-        Bitmap PreprocessImage(Bitmap image);
+        /// <param name="image">ÊäÈëÍ¼Ïñ</param>
+        /// <param name="options">Ô¤´¦ÀíÑ¡Ïî</param>
+        /// <returns>Ô¤´¦ÀíºóµÄÍ¼Ïñ</returns>
+        Bitmap PreprocessImage(Bitmap image, ProcessingOptions options = null);
+
+        /// <summary>
+        /// »Ò¶È»¯Í¼Ïñ
+        /// </summary>
+        /// <param name="image">ÊäÈëÍ¼Ïñ</param>
+        /// <returns>»Ò¶ÈÍ¼Ïñ</returns>
+        Bitmap ConvertToGrayscale(Bitmap image);
+
+        /// <summary>
+        /// ¶şÖµ»¯Í¼Ïñ
+        /// </summary>
+        /// <param name="image">ÊäÈëÍ¼Ïñ</param>
+        /// <param name="threshold">ãĞÖµ</param>
+        /// <returns>¶şÖµ»¯Í¼Ïñ</returns>
+        Bitmap ThresholdImage(Bitmap image, int threshold = 128);
+
+        /// <summary>
+        /// ½µÔë´¦Àí
+        /// </summary>
+        /// <param name="image">ÊäÈëÍ¼Ïñ</param>
+        /// <returns>½µÔëºóµÄÍ¼Ïñ</returns>
+        Bitmap DenoiseImage(Bitmap image);
+
+        /// <summary>
+        /// ±ßÔµ¼ì²â
+        /// </summary>
+        /// <param name="image">ÊäÈëÍ¼Ïñ</param>
+        /// <returns>±ßÔµÍ¼Ïñ</returns>
+        Bitmap DetectEdges(Bitmap image);
+
+        /// <summary>
+        /// Í¼ÏñËõ·Å
+        /// </summary>
+        /// <param name="image">ÊäÈëÍ¼Ïñ</param>
+        /// <param name="scale">Ëõ·Å±ÈÀı</param>
+        /// <returns>Ëõ·ÅºóµÄÍ¼Ïñ</returns>
+        Bitmap ScaleImage(Bitmap image, double scale);
+
+        /// <summary>
+        /// ²Ã¼ôÍ¼Ïñ
+        /// </summary>
+        /// <param name="image">ÊäÈëÍ¼Ïñ</param>
+        /// <param name="rectangle">²Ã¼ôÇøÓò</param>
+        /// <returns>²Ã¼ôºóµÄÍ¼Ïñ</returns>
+        Bitmap CropImage(Bitmap image, Rectangle rectangle);
+
+        /// <summary>
+        /// Ğı×ªÍ¼Ïñ
+        /// </summary>
+        /// <param name="image">ÊäÈëÍ¼Ïñ</param>
+        /// <param name="angle">Ğı×ª½Ç¶È</param>
+        /// <returns>Ğı×ªºóµÄÍ¼Ïñ</returns>
+        Bitmap RotateImage(Bitmap image, float angle);
+
+        /// <summary>
+        /// ¼ì²âÍ¼ÏñÖĞµÄKÏßĞÎÌ¬
+        /// </summary>
+        /// <param name="image">ÊäÈëÍ¼Ïñ</param>
+        /// <returns>KÏßÊ¶±ğ½á¹û</returns>
+        RecognitionResult DetectCandlestickPatterns(Bitmap image);
     }
 }
