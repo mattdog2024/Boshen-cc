@@ -665,36 +665,4 @@ namespace BoshenCC.WinForms.Views
 
         #endregion
     }
-
-    #region 临时控件类（将在后续创建）
-
-    /// <summary>
-    /// 用户偏好设置控件（临时占位，后续需要完整实现）
-    /// </summary>
-    public class UserPreferencesControl : UserControl
-    {
-        public UserPreferences Settings { get; set; }
-
-        public UserPreferencesControl()
-        {
-            this.BackColor = Color.White;
-            this.Size = new Size(600, 400);
-        }
-    }
-
-    /// <summary>
-    /// 高级设置控件（临时占位，后续需要完整实现）
-    /// </summary>
-    public class AdvancedSettingsControl : UserControl
-    {
-        public AppSettings Settings { get; set; }
-
-        public AdvancedSettingsControl()
-        {
-            this.BackColor = Color.White;
-            this.Size = new Size(600, 400);
-        }
-    }
-
-    #endregion
 }
