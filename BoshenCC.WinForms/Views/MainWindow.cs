@@ -55,6 +55,12 @@ namespace BoshenCC.WinForms.Views
         private CursorManager _cursorManager;
         private GestureHandler _gestureHandler;
 
+        // 用户体验优化系统 (Stream D)
+        private UserExperienceEnhancer _userExperienceEnhancer;
+        private TooltipManager _tooltipManager;
+        private HelpSystem _helpSystem;
+        private UserGuideOverlay _userGuideOverlay;
+
         #endregion
 
         #region 构造函数
@@ -224,8 +230,11 @@ namespace BoshenCC.WinForms.Views
                 // 初始化快捷键和鼠标交互系统
                 InitializeKeyboardAndMouseSystem();
 
+                // 初始化用户体验优化系统
+                InitializeUserExperienceSystem();
+
                 // 初始化状态栏
-                UpdateStatus("就绪 - 集成波神算法K线选择功能");
+                UpdateStatus("就绪 - 集成波神算法K线选择功能 (含用户体验优化)");
 
                 // 初始化日志
                 if (_logService != null)
@@ -276,6 +285,114 @@ namespace BoshenCC.WinForms.Views
             {
                 LogMessage($"初始化快捷键和鼠标交互系统失败: {ex.Message}", true);
             }
+        }
+
+        /// <summary>
+        /// 初始化用户体验优化系统
+        /// </summary>
+        private void InitializeUserExperienceSystem()
+        {
+            try
+            {
+                // 初始化用户体验增强器
+                _userExperienceEnhancer = new UserExperienceEnhancer(this);
+                SetupUserExperienceEnhancer();
+
+                // 初始化工具提示管理器
+                _tooltipManager = new TooltipManager();
+                SetupTooltipManager();
+
+                // 初始化帮助系统
+                _helpSystem = new HelpSystem(this);
+                SetupHelpSystem();
+
+                // 初始化用户引导覆盖层
+                _userGuideOverlay = new UserGuideOverlay();
+                SetupUserGuideOverlay();
+
+                LogMessage("用户体验优化系统初始化完成");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"初始化用户体验优化系统失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 设置用户体验增强器
+        /// </summary>
+        private void SetupUserExperienceEnhancer()
+        {
+            // 注册主要控件到用户体验增强器
+            _userExperienceEnhancer.RegisterControl(_kLineSelector);
+            _userExperienceEnhancer.RegisterControl(_priceDisplay);
+            _userExperienceEnhancer.RegisterControl(_selectionPanel);
+            _userExperienceEnhancer.RegisterControl(_pictureBoxMain);
+
+            // 订阅用户体验增强器事件
+            _userExperienceEnhancer.UserStateChanged += OnUserStateChanged;
+            _userExperienceEnhancer.InteractionHintRequested += OnInteractionHintRequested;
+            _userExperienceEnhancer.AnimationCompleted += OnAnimationCompleted;
+
+            LogMessage("用户体验增强器设置完成");
+        }
+
+        /// <summary>
+        /// 设置工具提示管理器
+        /// </summary>
+        private void SetupTooltipManager()
+        {
+            // 注册控件工具提示
+            _tooltipManager.RegisterTooltip(_kLineSelector,
+                "K线选择器：点击K线选择测量点。支持多种测量模式，快捷键1-4切换模式。",
+                "K线选择器", "Default");
+
+            _tooltipManager.RegisterTooltip(_priceDisplay,
+                "价格显示：显示选中K线的价格信息和算法计算结果。",
+                "价格显示", "Default");
+
+            _tooltipManager.RegisterTooltip(_selectionPanel,
+                "选择面板：管理测量模式和操作。提供清除、撤销、重做等功能。",
+                "选择面板", "Default");
+
+            _tooltipManager.RegisterTooltip(_pictureBoxMain,
+                "主显示区域：显示K线图表。支持鼠标手势和十字准星显示。",
+                "主显示区域", "Default");
+
+            // 订阅工具提示事件
+            _tooltipManager.TooltipShown += OnTooltipShown;
+            _tooltipManager.TooltipHidden += OnTooltipHidden;
+            _tooltipManager.TooltipClicked += OnTooltipClicked;
+
+            LogMessage("工具提示管理器设置完成");
+        }
+
+        /// <summary>
+        /// 设置帮助系统
+        /// </summary>
+        private void SetupHelpSystem()
+        {
+            // 订阅帮助系统事件
+            _helpSystem.HelpTopicShown += OnHelpTopicShown;
+            _helpSystem.SearchCompleted += OnHelpSearchCompleted;
+            _helpSystem.HelpWindowClosed += OnHelpWindowClosed;
+
+            LogMessage("帮助系统设置完成");
+        }
+
+        /// <summary>
+        /// 设置用户引导覆盖层
+        /// </summary>
+        private void SetupUserGuideOverlay()
+        {
+            // 订阅用户引导事件
+            _userGuideOverlay.GuideStarted += OnGuideStarted;
+            _userGuideOverlay.StepChanged += OnGuideStepChanged;
+            _userGuideOverlay.GuideCompleted += OnGuideCompleted;
+            _userGuideOverlay.GuideSkipped += OnGuideSkipped;
+            _userGuideOverlay.UserInteraction += OnGuideUserInteraction;
+
+            LogMessage("用户引导覆盖层设置完成");
         }
 
         /// <summary>
@@ -769,6 +886,243 @@ namespace BoshenCC.WinForms.Views
 
         #endregion
 
+        #region 用户体验优化系统事件处理
+
+        /// <summary>
+        /// 用户状态变化事件处理
+        /// </summary>
+        private void OnUserStateChanged(object sender, UserStateEventArgs e)
+        {
+            try
+            {
+                if (e.IsIdle)
+                {
+                    LogMessage("用户进入空闲状态");
+                    // 可以在这里显示用户引导提示
+                }
+                else
+                {
+                    LogMessage("用户恢复活动状态");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理用户状态变化失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 交互提示请求事件处理
+        /// </summary>
+        private void OnInteractionHintRequested(object sender, InteractionHintEventArgs e)
+        {
+            try
+            {
+                LogMessage($"交互提示: {e.Hint} (控件: {e.Control?.Name})");
+
+                // 可以根据提示类型显示不同的反馈
+                if (e.Hint.Contains("点击"))
+                {
+                    _tooltipManager?.ShowFeedback("点击进行选择", TooltipType.Info);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理交互提示失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 动画完成事件处理
+        /// </summary>
+        private void OnAnimationCompleted(object sender, AnimationCompletedEventArgs e)
+        {
+            try
+            {
+                LogMessage($"动画完成: {e.AnimationType} (控件: {e.Control?.Name})");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理动画完成事件失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 工具提示显示事件处理
+        /// </summary>
+        private void OnTooltipShown(object sender, TooltipShownEventArgs e)
+        {
+            try
+            {
+                LogMessage($"工具提示显示: {e.Title} - {e.Text?.Substring(0, Math.Min(50, e.Text?.Length ?? 0))}...");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理工具提示显示事件失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 工具提示隐藏事件处理
+        /// </summary>
+        private void OnTooltipHidden(object sender, TooltipHiddenEventArgs e)
+        {
+            try
+            {
+                LogMessage($"工具提示隐藏: {e.Text?.Substring(0, Math.Min(30, e.Text?.Length ?? 0))}...");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理工具提示隐藏事件失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 工具提示点击事件处理
+        /// </summary>
+        private void OnTooltipClicked(object sender, TooltipClickedEventArgs e)
+        {
+            try
+            {
+                LogMessage($"工具提示点击: {e.Text?.Substring(0, Math.Min(30, e.Text?.Length ?? 0))}...");
+
+                // 可以根据点击的控件显示相关帮助
+                if (e.Control != null)
+                {
+                    _helpSystem?.ShowContextHelp(e.Control.Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理工具提示点击事件失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 帮助主题显示事件处理
+        /// </summary>
+        private void OnHelpTopicShown(object sender, HelpTopicShownEventArgs e)
+        {
+            try
+            {
+                LogMessage($"帮助主题显示: {e.Topic?.Title}");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理帮助主题显示事件失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 帮助搜索完成事件处理
+        /// </summary>
+        private void OnHelpSearchCompleted(object sender, HelpSearchCompletedEventArgs e)
+        {
+            try
+            {
+                LogMessage($"帮助搜索完成: '{e.SearchTerm}' - 找到 {e.Results?.Count ?? 0} 个结果");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理帮助搜索完成事件失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 帮助窗口关闭事件处理
+        /// </summary>
+        private void OnHelpWindowClosed(object sender, HelpWindowClosedEventArgs e)
+        {
+            try
+            {
+                LogMessage("帮助窗口关闭");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理帮助窗口关闭事件失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 引导开始事件处理
+        /// </summary>
+        private void OnGuideStarted(object sender, GuideStartedEventArgs e)
+        {
+            try
+            {
+                LogMessage($"用户引导开始: {e.Title} (共 {e.TotalSteps} 步)");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理引导开始事件失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 引导步骤变化事件处理
+        /// </summary>
+        private void OnGuideStepChanged(object sender, GuideStepChangedEventArgs e)
+        {
+            try
+            {
+                LogMessage($"引导步骤变化: {e.PreviousStep?.Title} -> {e.CurrentStep?.Title} (第 {e.StepIndex + 1} 步)");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理引导步骤变化事件失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 引导完成事件处理
+        /// </summary>
+        private void OnGuideCompleted(object sender, GuideCompletedEventArgs e)
+        {
+            try
+            {
+                LogMessage($"用户引导完成: {e.Title} (完成 {e.CompletedSteps}/{e.TotalSteps} 步)");
+
+                // 可以显示完成反馈
+                _tooltipManager?.ShowFeedback("恭喜！您已完成用户引导", TooltipType.Success);
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理引导完成事件失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 引导跳过事件处理
+        /// </summary>
+        private void OnGuideSkipped(object sender, GuideSkippedEventArgs e)
+        {
+            try
+            {
+                LogMessage($"用户引导跳过: {e.Title} (第 {e.CurrentStep}/{e.TotalSteps} 步)");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理引导跳过事件失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 引导用户交互事件处理
+        /// </summary>
+        private void OnGuideUserInteraction(object sender, GuideInteractionEventArgs e)
+        {
+            try
+            {
+                LogMessage($"引导用户交互: {e.Action} (步骤: {e.StepTitle})");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"处理引导用户交互事件失败: {ex.Message}", true);
+            }
+        }
+
+        #endregion
+
         #region 公共方法
 
         /// <summary>
@@ -846,6 +1200,64 @@ namespace BoshenCC.WinForms.Views
             {
                 _isCalculating = false;
                 UpdateControlStates();
+            }
+        }
+
+        /// <summary>
+        /// 显示用户引导
+        /// </summary>
+        public void ShowUserGuide()
+        {
+            try
+            {
+                _userGuideOverlay?.StartGuide("波神K线测量工具用户引导");
+                LogMessage("启动用户引导");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"显示用户引导失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 显示上下文帮助
+        /// </summary>
+        /// <param name="context">帮助上下文</param>
+        public void ShowContextHelp(string context)
+        {
+            try
+            {
+                _helpSystem?.ShowContextHelp(context);
+                LogMessage($"显示上下文帮助: {context}");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"显示上下文帮助失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 显示快速帮助
+        /// </summary>
+        /// <param name="control">目标控件</param>
+        /// <param name="message">帮助消息</param>
+        public void ShowQuickHelp(Control control, string message)
+        {
+            try
+            {
+                _tooltipManager?.ShowFeedback(message, TooltipType.Info);
+
+                // 也可以显示用户引导高亮
+                if (control != null)
+                {
+                    _userGuideOverlay?.HighlightControl(control, message, 3000);
+                }
+
+                LogMessage($"显示快速帮助: {message}");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"显示快速帮助失败: {ex.Message}", true);
             }
         }
 
@@ -1270,6 +1682,25 @@ namespace BoshenCC.WinForms.Views
         {
             try
             {
+                // 使用新的帮助系统显示帮助
+                _helpSystem?.ShowHelpHome();
+                LogMessage("显示帮助系统");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"显示帮助失败: {ex.Message}", true);
+                // 降级到传统帮助显示
+                ShowTraditionalHelp();
+            }
+        }
+
+        /// <summary>
+        /// 显示传统帮助（降级方案）
+        /// </summary>
+        private void ShowTraditionalHelp()
+        {
+            try
+            {
                 var helpText = @"快捷键帮助：
 
 文件操作：
@@ -1317,11 +1748,11 @@ F12 - 关于
 左滑手势 - 清除选择";
 
                 MessageBox.Show(helpText, "快捷键帮助", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LogMessage("显示帮助信息");
+                LogMessage("显示传统帮助信息");
             }
             catch (Exception ex)
             {
-                LogMessage($"显示帮助失败: {ex.Message}", true);
+                LogMessage($"显示传统帮助失败: {ex.Message}", true);
             }
         }
 
@@ -1826,6 +2257,12 @@ F12 - 关于
                 _mouseInteractionHandler?.Dispose();
                 _cursorManager?.Dispose();
                 _gestureHandler?.Dispose();
+
+                // 释放用户体验优化系统资源
+                _userExperienceEnhancer?.Dispose();
+                _tooltipManager?.Dispose();
+                _helpSystem?.Dispose();
+                _userGuideOverlay?.Dispose();
 
                 _currentImage?.Dispose();
                 LogMessage("主窗体关闭，应用程序退出");
