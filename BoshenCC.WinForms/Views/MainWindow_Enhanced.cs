@@ -10,12 +10,14 @@ using BoshenCC.Core.Interfaces;
 using BoshenCC.Services.Interfaces;
 using BoshenCC.Models;
 using BoshenCC.WinForms.Controls;
+using BoshenCC.WinForms.Utils;
 
 namespace BoshenCC.WinForms.Views
 {
     /// <summary>
-    /// 主窗体 - 集成版本
+    /// 主窗体 - 集成版本（增强响应式设计）
     /// 包含K线选择和波神算法功能
+    /// Issue #6 Stream A: UI优化和响应式设计
     /// </summary>
     public partial class MainWindow : Form
     {
@@ -48,6 +50,10 @@ namespace BoshenCC.WinForms.Views
         private SplitContainer _splitContainerBoshen;
         private PictureBox _pictureBoxMain;
 
+        // 响应式设计相关
+        private bool _isResponsiveInitialized = false;
+        private ScreenSizeType _currentScreenSize = ScreenSizeType.Unknown;
+
         #endregion
 
         #region 构造函数
@@ -70,9 +76,10 @@ namespace BoshenCC.WinForms.Views
             // 初始化数据
             _predictionLines = new List<PredictionLine>();
 
-            // 初始化UI
+            // 初始化UI（包含响应式设计）
             InitializeUI();
             SetupEventHandlers();
+            InitializeResponsiveDesign();
         }
 
         #endregion
@@ -89,7 +96,8 @@ namespace BoshenCC.WinForms.Views
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Horizontal,
-                SplitterDistance = 500
+                SplitterDistance = 500,
+                Name = "splitContainerMain"
             };
 
             // 创建K线选择容器
@@ -97,13 +105,15 @@ namespace BoshenCC.WinForms.Views
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Horizontal,
-                SplitterDistance = 400
+                SplitterDistance = 400,
+                Name = "splitContainerKLine"
             };
 
             // 创建K线选择器
             _kLineSelector = new KLineSelector
             {
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                Name = "kLineSelector"
             };
 
             // 创建原始图像显示
@@ -111,13 +121,15 @@ namespace BoshenCC.WinForms.Views
             {
                 Dock = DockStyle.Fill,
                 BorderStyle = BorderStyle.FixedSingle,
-                SizeMode = PictureBoxSizeMode.Zoom
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Name = "pictureBoxMain"
             };
 
             // 创建底部标签页
             _tabControlBottom = new TabControl
             {
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                Name = "tabControlBottom"
             };
 
             // 创建日志页
@@ -127,7 +139,8 @@ namespace BoshenCC.WinForms.Views
                 Dock = DockStyle.Fill,
                 ReadOnly = true,
                 ScrollBars = RichTextBoxScrollBars.Vertical,
-                Font = new Font("Consolas", 9)
+                Font = new Font("Consolas", 9),
+                Name = "richTextBoxLog"
             };
             _tabPageLog.Controls.Add(_richTextBoxLog);
 
@@ -137,17 +150,20 @@ namespace BoshenCC.WinForms.Views
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 700
+                SplitterDistance = 700,
+                Name = "splitContainerBoshen"
             };
 
             _priceDisplay = new PriceDisplay
             {
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                Name = "priceDisplay"
             };
 
             _selectionPanel = new SelectionPanel
             {
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                Name = "selectionPanel"
             };
 
             _splitContainerBoshen.Panel1.Controls.Add(_priceDisplay);
@@ -159,7 +175,8 @@ namespace BoshenCC.WinForms.Views
             _tabPageSettings.Controls.Add(new GroupBox
             {
                 Dock = DockStyle.Fill,
-                Text = "应用程序设置"
+                Text = "应用程序设置",
+                Name = "groupBoxSettings"
             });
 
             // 添加标签页
@@ -175,6 +192,178 @@ namespace BoshenCC.WinForms.Views
 
             // 添加到主窗体
             this.Controls.Add(_splitContainerMain);
+
+            // 应用UI增强
+            ApplyUIEnhancements();
+        }
+
+        /// <summary>
+        /// 应用UI增强功能
+        /// </summary>
+        private void ApplyUIEnhancements()
+        {
+            try
+            {
+                // 为主要控件启用平滑渲染
+                UIEnhancer.OptimizeControls(
+                    _splitContainerMain, _splitContainerKLine, _splitContainerBoshen,
+                    _tabControlBottom, _pictureBoxMain, _kLineSelector
+                );
+
+                // 为按钮添加悬停效果
+                if (toolStrip != null)
+                {
+                    foreach (ToolStripItem item in toolStrip.Items)
+                    {
+                        if (item is ToolStripButton button)
+                        {
+                            UIEnhancer.SetButtonHoverEffect(button);
+                        }
+                    }
+                }
+
+                // 设置现代化的工具提示
+                UIEnhancer.SetModernTooltip(_kLineSelector, "点击选择K线图的A点和B点进行测量");
+                UIEnhancer.SetModernTooltip(_pictureBoxMain, "显示原始K线图像");
+                UIEnhancer.SetModernTooltip(_tabControlBottom, "切换不同的功能面板");
+
+                // 预加载资源
+                UIEnhancer.PreloadResources();
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"应用UI增强失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 初始化响应式设计
+        /// </summary>
+        private void InitializeResponsiveDesign()
+        {
+            try
+            {
+                if (_isResponsiveInitialized)
+                    return;
+
+                // 初始化DPI和响应式布局
+                DPIHelper.Initialize();
+                ResponsiveLayout.Initialize();
+
+                // 应用DPI缩放
+                DPIHelper.ApplyDpiScaling(this);
+
+                // 设置响应式布局
+                ResponsiveLayout.MakeResponsive(this);
+                ResponsiveLayout.MakeResponsive(_splitContainerMain);
+                ResponsiveLayout.MakeResponsive(_splitContainerKLine);
+                ResponsiveLayout.MakeResponsive(_splitContainerBoshen);
+
+                // 添加自定义响应式规则
+                AddCustomResponsiveRules();
+
+                _isResponsiveInitialized = true;
+                LogMessage("响应式设计初始化完成");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"响应式设计初始化失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 添加自定义响应式规则
+        /// </summary>
+        private void AddCustomResponsiveRules()
+        {
+            try
+            {
+                // 小屏幕规则 - 隐藏部分标签页
+                ResponsiveLayout.RegisterLayoutRule(this, new ResponsiveLayout.LayoutRule(
+                    "SmallScreenLayout",
+                    Size.Empty,
+                    ResponsiveLayout.SmallScreen,
+                    control => {
+                        if (_tabControlBottom != null && _tabControlBottom.TabPages.Count > 2)
+                        {
+                            // 隐藏设置页，只保留日志和波神算法页
+                            _tabPageSettings.Visible = false;
+                        }
+                        // 调整SplitContainer为垂直布局
+                        if (_splitContainerKLine != null)
+                        {
+                            _splitContainerKLine.Orientation = Orientation.Vertical;
+                        }
+                        LogMessage("切换到小屏幕布局模式");
+                    }
+                ));
+
+                // 中等屏幕规则 - 显示所有功能
+                ResponsiveLayout.RegisterLayoutRule(this, new ResponsiveLayout.LayoutRule(
+                    "MediumScreenLayout",
+                    ResponsiveLayout.SmallScreen,
+                    ResponsiveLayout.MediumScreen,
+                    control => {
+                        // 显示所有标签页
+                        if (_tabPageSettings != null)
+                        {
+                            _tabPageSettings.Visible = true;
+                        }
+                        // 恢复水平布局
+                        if (_splitContainerKLine != null)
+                        {
+                            _splitContainerKLine.Orientation = Orientation.Horizontal;
+                        }
+                        LogMessage("切换到中等屏幕布局模式");
+                    }
+                ));
+
+                // 大屏幕规则 - 优化布局和字体
+                ResponsiveLayout.RegisterLayoutRule(this, new ResponsiveLayout.LayoutRule(
+                    "LargeScreenLayout",
+                    ResponsiveLayout.MediumScreen,
+                    ResponsiveLayout.LargeScreen,
+                    control => {
+                        // 增加Splitter距离以充分利用空间
+                        if (_splitContainerMain != null)
+                        {
+                            var scale = DPIHelper.GetCurrentScale();
+                            _splitContainerMain.SplitterDistance = (int)(600 * scale);
+                        }
+                        if (_splitContainerBoshen != null)
+                        {
+                            var scale = DPIHelper.GetCurrentScale();
+                            _splitContainerBoshen.SplitterDistance = (int)(800 * scale);
+                        }
+                        LogMessage("切换到大屏幕布局模式");
+                    }
+                ));
+
+                // 超大屏幕规则 - 最大化和优化显示
+                ResponsiveLayout.RegisterLayoutRule(this, new ResponsiveLayout.LayoutRule(
+                    "ExtraLargeScreenLayout",
+                    ResponsiveLayout.LargeScreen,
+                    Size.Empty,
+                    control => {
+                        // 最大化使用空间
+                        if (_splitContainerMain != null)
+                        {
+                            var scale = DPIHelper.GetCurrentScale();
+                            _splitContainerMain.SplitterDistance = (int)(700 * scale);
+                        }
+                        if (_splitContainerKLine != null)
+                        {
+                            var scale = DPIHelper.GetCurrentScale();
+                            _splitContainerKLine.SplitterDistance = (int)(500 * scale);
+                        }
+                        LogMessage("切换到超大屏幕布局模式");
+                    }
+                ));
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"添加自定义响应式规则失败: {ex.Message}", true);
+            }
         }
 
         /// <summary>
@@ -197,6 +386,8 @@ namespace BoshenCC.WinForms.Views
 
             // 窗体事件
             this.KeyDown += OnMainWindowKeyDown;
+            this.DpiChanged += OnDpiChanged;
+            this.Resize += OnWindowResize;
         }
 
         /// <summary>
@@ -207,17 +398,24 @@ namespace BoshenCC.WinForms.Views
             try
             {
                 // 设置窗体属性
-                this.Text = "Boshen CC - 股票图表识别工具 (集成版)";
-                this.MinimumSize = new Size(1200, 800);
+                this.Text = "Boshen CC - 股票图表识别工具 (集成版 - 响应式设计)";
+                this.MinimumSize = new Size(1000, 700); // 调整最小尺寸以支持响应式设计
+
+                // 应用现代化样式
+                UIEnhancer.ApplyModernStyle(this,
+                    backColor: Color.FromArgb(248, 249, 250),
+                    foreColor: Color.FromArgb(33, 37, 41),
+                    borderColor: Color.FromArgb(206, 212, 218),
+                    borderRadius: 8);
 
                 // 初始化状态栏
-                UpdateStatus("就绪 - 集成波神算法K线选择功能");
+                UpdateStatus("就绪 - 集成波神算法K线选择功能（响应式设计已启用）");
 
                 // 初始化日志
                 if (_logService != null)
                 {
-                    _logService.Info("主窗体初始化完成 - 集成版");
-                    LogMessage("应用程序启动成功 - 集成波神算法功能");
+                    _logService.Info("主窗体初始化完成 - 集成版（响应式设计）");
+                    LogMessage("应用程序启动成功 - 集成波神算法功能，支持高DPI和多显示器");
                 }
 
                 // 加载配置
@@ -225,11 +423,85 @@ namespace BoshenCC.WinForms.Views
 
                 // 初始化控件状态
                 UpdateControlStates();
+
+                // 更新当前屏幕尺寸类型
+                UpdateScreenSizeType();
             }
             catch (Exception ex)
             {
                 LogMessage($"初始化UI失败: {ex.Message}", true);
                 MessageBox.Show($"初始化UI失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
+
+        #region 响应式设计事件处理
+
+        /// <summary>
+        /// DPI改变事件处理
+        /// </summary>
+        private void OnDpiChanged(object sender, DpiChangedEventArgs e)
+        {
+            try
+            {
+                LogMessage($"DPI改变: {e.OldDpi} -> {e.NewDpi}");
+
+                // 更新DPI设置
+                DPIHelper.UpdateDpiSettings();
+
+                // 重新应用DPI缩放
+                DPIHelper.ApplyDpiScaling(this);
+
+                // 更新响应式布局
+                ResponsiveLayout.UpdateLayout(this);
+
+                LogMessage("DPI更改处理完成");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"DPI改变处理失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 窗口大小改变事件处理
+        /// </summary>
+        private void OnWindowResize(object sender, EventArgs e)
+        {
+            try
+            {
+                UpdateScreenSizeType();
+
+                // 根据屏幕尺寸调整布局
+                if (_currentScreenSize != ResponsiveLayout.GetScreenSizeType(this))
+                {
+                    _currentScreenSize = ResponsiveLayout.GetScreenSizeType(this);
+                    LogMessage($"屏幕尺寸类型改变: {_currentScreenSize}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"窗口大小改变处理失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 更新屏幕尺寸类型
+        /// </summary>
+        private void UpdateScreenSizeType()
+        {
+            try
+            {
+                _currentScreenSize = ResponsiveLayout.GetScreenSizeType(this);
+
+                // 更新状态栏信息
+                var dpiInfo = DPIHelper.GetCurrentScale();
+                UpdateStatus($"就绪 - 屏幕类型: {_currentScreenSize}, DPI缩放: {dpiInfo:F2}x");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"更新屏幕尺寸类型失败: {ex.Message}", true);
             }
         }
 
@@ -337,7 +609,7 @@ namespace BoshenCC.WinForms.Views
         }
 
         /// <summary>
-        /// 主窗体键盘事件处理
+        /// 主窗体键盘事件处理（增强版）
         /// </summary>
         private void OnMainWindowKeyDown(object sender, KeyEventArgs e)
         {
@@ -361,6 +633,20 @@ namespace BoshenCC.WinForms.Views
                         ExportResults();
                         e.Handled = true;
                         break;
+                    case Keys.D0: // Ctrl+0 重置缩放
+                        ResetZoom();
+                        e.Handled = true;
+                        break;
+                    case Keys.Oemplus: // Ctrl+Plus 放大
+                    case Keys.Add:
+                        ZoomIn();
+                        e.Handled = true;
+                        break;
+                    case Keys.OemMinus: // Ctrl+Minus 缩小
+                    case Keys.Subtract:
+                        ZoomOut();
+                        e.Handled = true;
+                        break;
                 }
             }
             else if (e.KeyCode == Keys.Space)
@@ -372,6 +658,120 @@ namespace BoshenCC.WinForms.Views
             {
                 this.Close();
                 e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.F11) // F11 全屏切换
+            {
+                ToggleFullScreen();
+                e.Handled = true;
+            }
+        }
+
+        #endregion
+
+        #region 响应式设计增强方法
+
+        /// <summary>
+        /// 重置缩放
+        /// </summary>
+        public void ResetZoom()
+        {
+            try
+            {
+                DPIHelper.Reset();
+                DPIHelper.Initialize();
+                DPIHelper.ApplyDpiScaling(this);
+                ResponsiveLayout.UpdateLayout(this);
+                LogMessage("缩放已重置");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"重置缩放失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 放大
+        /// </summary>
+        public void ZoomIn()
+        {
+            try
+            {
+                // 这里可以实现放大逻辑
+                LogMessage("放大功能 - 开发中");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"放大失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 缩小
+        /// </summary>
+        public void ZoomOut()
+        {
+            try
+            {
+                // 这里可以实现缩小逻辑
+                LogMessage("缩小功能 - 开发中");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"缩小失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 切换全屏模式
+        /// </summary>
+        public void ToggleFullScreen()
+        {
+            try
+            {
+                if (FormBorderStyle == FormBorderStyle.None)
+                {
+                    // 退出全屏
+                    FormBorderStyle = FormBorderStyle.Sizable;
+                    WindowState = FormWindowState.Normal;
+                    MenuStrip.Visible = true;
+                    if (toolStrip != null) toolStrip.Visible = true;
+                    if (statusStrip != null) statusStrip.Visible = true;
+                    LogMessage("退出全屏模式");
+                }
+                else
+                {
+                    // 进入全屏
+                    FormBorderStyle = FormBorderStyle.None;
+                    WindowState = FormWindowState.Maximized;
+                    MenuStrip.Visible = false;
+                    if (toolStrip != null) toolStrip.Visible = false;
+                    if (statusStrip != null) statusStrip.Visible = false;
+                    LogMessage("进入全屏模式");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"切换全屏模式失败: {ex.Message}", true);
+            }
+        }
+
+        /// <summary>
+        /// 获取响应式设计信息
+        /// </summary>
+        public string GetResponsiveInfo()
+        {
+            try
+            {
+                var info = $"屏幕尺寸: {this.Size}\n";
+                info += $"屏幕类型: {_currentScreenSize}\n";
+                info += $"DPI缩放: {DPIHelper.GetCurrentScale():F2}x\n";
+                info += $"是否高DPI: {DPIHelper.IsHighDpi()}\n";
+                info += $"响应式设计已启用: {_isResponsiveInitialized}";
+                return info;
+            }
+            catch (Exception ex)
+            {
+                return $"获取响应式信息失败: {ex.Message}";
             }
         }
 
@@ -541,6 +941,8 @@ namespace BoshenCC.WinForms.Views
             var content = new System.Text.StringBuilder();
             content.AppendLine("波神算法预测线结果");
             content.AppendLine($"导出时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            content.AppendLine($"屏幕类型: {_currentScreenSize}");
+            content.AppendLine($"DPI缩放: {DPIHelper.GetCurrentScale():F2}x");
             content.AppendLine();
 
             var pointAPrice = _kLineSelector.GetPointAPrice();
@@ -780,7 +1182,20 @@ namespace BoshenCC.WinForms.Views
         /// </summary>
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            LogMessage("主窗体加载完成 - 集成版");
+            try
+            {
+                LogMessage("主窗体加载完成 - 集成版（响应式设计）");
+
+                // 显示响应式设计信息
+                if (_isResponsiveInitialized)
+                {
+                    LogMessage($"响应式设计信息: {GetResponsiveInfo()}");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"窗体加载失败: {ex.Message}", true);
+            }
         }
 
         /// <summary>
@@ -804,6 +1219,14 @@ namespace BoshenCC.WinForms.Views
 
                 SaveSettings();
                 _currentImage?.Dispose();
+
+                // 清理响应式设计资源
+                if (_isResponsiveInitialized)
+                {
+                    ResponsiveLayout.Reset();
+                    DPIHelper.Reset();
+                }
+
                 LogMessage("主窗体关闭，应用程序退出");
             }
             catch (Exception ex)
@@ -849,8 +1272,15 @@ namespace BoshenCC.WinForms.Views
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Boshen CC - 股票图表识别工具 (集成版)\n\n版本: 1.0.0\n集成功能: K线选择、波神算法计算\n\n© 2025 Boshen Technology",
-                "关于", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var aboutText = "Boshen CC - 股票图表识别工具 (集成版 - 响应式设计)\n\n" +
+                           $"版本: 1.0.0\n" +
+                           $"集成功能: K线选择、波神算法计算\n" +
+                           $"响应式设计: 支持高DPI和多显示器\n" +
+                           $"当前DPI缩放: {DPIHelper.GetCurrentScale():F2}x\n" +
+                           $"屏幕类型: {_currentScreenSize}\n\n" +
+                           "© 2025 Boshen Technology";
+
+            MessageBox.Show(aboutText, "关于", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         #endregion
