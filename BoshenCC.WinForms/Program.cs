@@ -6,6 +6,7 @@ using BoshenCC.Services.Interfaces;
 using BoshenCC.Services.Implementations;
 using BoshenCC.Core.Interfaces;
 using BoshenCC.Core;
+using BoshenCC.Core.Services;
 using BoshenCC.WinForms.Services;
 
 namespace BoshenCC.WinForms
@@ -71,6 +72,10 @@ namespace BoshenCC.WinForms
                 // 注册图像处理器
                 var imageProcessor = new ImageProcessor(logService);
                 ServiceLocator.RegisterSingleton<IImageProcessor>(imageProcessor);
+
+                // 注册窗口跟踪服务
+                var windowTracker = new WindowTracker(null); // 使用null logger，将在内部创建
+                ServiceLocator.RegisterSingleton<WindowTracker>(windowTracker);
 
                 // 记录服务初始化完成
                 logService.Info("所有服务初始化完成");

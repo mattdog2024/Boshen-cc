@@ -192,6 +192,168 @@ namespace BoshenCC.Core.Utils
 
         #endregion
 
+        #region 窗口查找和枚举
+
+        /// <summary>
+        /// 查找窗口句柄
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern IntPtr FindWindow(
+            [MarshalAs(UnmanagedType.LPTStr)] string lpClassName,
+            [MarshalAs(UnmanagedType.LPTStr)] string lpWindowName);
+
+        /// <summary>
+        /// 查找子窗口句柄
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern IntPtr FindWindowEx(
+            IntPtr hwndParent,
+            IntPtr hwndChildAfter,
+            [MarshalAs(UnmanagedType.LPTStr)] string lpszClass,
+            [MarshalAs(UnmanagedType.LPTStr)] string lpszWindow);
+
+        /// <summary>
+        /// 枚举窗口
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool EnumWindows(
+            EnumWindowsProc lpEnumFunc,
+            IntPtr lParam);
+
+        /// <summary>
+        /// 枚举窗口回调函数
+        /// </summary>
+        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        /// <summary>
+        /// 获取窗口类名
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern int GetClassName(
+            IntPtr hWnd,
+            StringBuilder lpClassName,
+            int nMaxCount);
+
+        /// <summary>
+        /// 获取窗口标题
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern int GetWindowText(
+            IntPtr hWnd,
+            StringBuilder lpString,
+            int nMaxCount);
+
+        /// <summary>
+        /// 获取窗口标题长度
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern int GetWindowTextLength(IntPtr hWnd);
+
+        /// <summary>
+        /// 获取窗口进程ID
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        #endregion
+
+        #region 窗口位置和状态
+
+        /// <summary>
+        /// 获取窗口矩形
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+        /// <summary>
+        /// 获取客户区矩形
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+
+        /// <summary>
+        /// 屏幕坐标转客户区坐标
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool ScreenToClient(IntPtr hWnd, ref POINT lpPoint);
+
+        /// <summary>
+        /// 客户区坐标转屏幕坐标
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+
+        /// <summary>
+        /// 获取窗口信息
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetWindowInfo(IntPtr hWnd, ref WINDOWINFO pwi);
+
+        /// <summary>
+        /// 检查窗口是否可见
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsWindowVisible(IntPtr hWnd);
+
+        /// <summary>
+        /// 检查窗口是否最小化
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsIconic(IntPtr hWnd);
+
+        /// <summary>
+        /// 检查窗口是否最大化
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsZoomed(IntPtr hWnd);
+
+        #endregion
+
+        #region Windows事件钩子
+
+        /// <summary>
+        /// 设置Windows事件钩子
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr SetWinEventHook(
+            uint eventMin,
+            uint eventMax,
+            IntPtr hmodWinEventProc,
+            WinEventDelegate lpfnWinEventProc,
+            uint idProcess,
+            uint idThread,
+            uint dwFlags);
+
+        /// <summary>
+        /// Windows事件回调函数
+        /// </summary>
+        public delegate void WinEventDelegate(
+            IntPtr hWinEventHook,
+            uint eventType,
+            IntPtr hWnd,
+            int idObject,
+            int idChild,
+            uint dwEventThread,
+            uint dwmsEventTime);
+
+        /// <summary>
+        /// 移除Windows事件钩子
+        /// </summary>
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+
+        #endregion
+
         #region 错误处理
 
         /// <summary>
@@ -251,6 +413,22 @@ namespace BoshenCC.Core.Utils
         // 窗口长整型索引
         public const int GWL_EXSTYLE = -20;
         public const int GWL_STYLE = -16;
+
+        // Windows事件常量
+        public const uint EVENT_OBJECT_CREATE = 0x8000;
+        public const uint EVENT_OBJECT_DESTROY = 0x8001;
+        public const uint EVENT_OBJECT_SHOW = 0x8002;
+        public const uint EVENT_OBJECT_HIDE = 0x8003;
+        public const uint EVENT_OBJECT_LOCATIONCHANGE = 0x800B;
+        public const uint EVENT_OBJECT_NAMECHANGE = 0x800C;
+        public const uint EVENT_MIN = 0x00000001;
+        public const uint EVENT_MAX = 0x7FFFFFFF;
+
+        // 窗口事件钩子标志
+        public const uint WINEVENT_OUTOFCONTEXT = 0x0000;
+        public const uint WINEVENT_SKIPOWNTHREAD = 0x0001;
+        public const uint WINEVENT_SKIPOWNPROCESS = 0x0002;
+        public const uint WINEVENT_INCONTEXT = 0x0004;
 
         // 错误消息格式化标志
         public const uint FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x00000100;
